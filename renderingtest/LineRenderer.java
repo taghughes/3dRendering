@@ -7,12 +7,10 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 public class LineRenderer extends JPanel {
-    private final int PANEL_WIDTH = 1000;
-    private final int PANEL_HEIGHT = 1000;
-    private final int PANEL_MID_X = PANEL_WIDTH/2;
-    private final int PANEL_MID_Y = PANEL_HEIGHT/2;
-    private ArrayList<Line> lines = Line.getLines();
     private Camera cam = new Camera();
+    private final int PANEL_WIDTH = cam.screenWidth;
+    private final int PANEL_HEIGHT = cam.screenHeight;
+    private ArrayList<Line> lines = Line.getLines();
 
     private final boolean[] keys = new boolean[256];
     private final int DELAY = 16;
@@ -28,7 +26,6 @@ public class LineRenderer extends JPanel {
         for (ProjectedLine l : projectedLines) {
             g.drawLine(l.projectedLine[0].x, l.projectedLine[0].y, l.projectedLine[1].x, l.projectedLine[1].y);
         }
-        //g.drawLine(0,0,getWidth(),getHeight());
     }
 
     public LineRenderer() {
@@ -121,7 +118,7 @@ public class LineRenderer extends JPanel {
         EventQueue.invokeLater(() -> {
             JFrame frame = new JFrame("line renderer");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(1000, 1000);
+            
 
             Vertex v1 = new Vertex(-2, 0, 2);
             Vertex v2 = new Vertex(2, 0, 2);
@@ -142,8 +139,8 @@ public class LineRenderer extends JPanel {
             lines.add(new Line(v6,v4));
 
             
-            // 2. Instantiate and add your custom drawing panel to the JFrame
             LineRenderer drawingPanel = new LineRenderer();
+            frame.setSize(drawingPanel.PANEL_WIDTH, drawingPanel.PANEL_HEIGHT);
             frame.add(drawingPanel);
             frame.setVisible(true);
         });
