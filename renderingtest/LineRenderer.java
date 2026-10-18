@@ -26,7 +26,7 @@ public class LineRenderer extends JPanel {
         g.setColor(Color.WHITE);
         ArrayList<ProjectedLine> projectedLines = cam.getProjectedLines(lines, PANEL_WIDTH, PANEL_HEIGHT);
         for (ProjectedLine l : projectedLines) {
-            g.drawLine(l.projectedLine[0].x + PANEL_MID_X, -l.projectedLine[0].y + PANEL_MID_Y, l.projectedLine[1].x + PANEL_MID_X, -l.projectedLine[1].y + PANEL_MID_Y);
+            g.drawLine(l.projectedLine[0].x, l.projectedLine[0].y, l.projectedLine[1].x, l.projectedLine[1].y);
         }
         //g.drawLine(0,0,getWidth(),getHeight());
     }
@@ -58,17 +58,63 @@ public class LineRenderer extends JPanel {
     }
 
     private void stateChange() {
-        if (keys[KeyEvent.VK_A]) cam.cameraPosition.x -= cam.CAMERA_SPEED;
-        if (keys[KeyEvent.VK_D]) cam.cameraPosition.x += cam.CAMERA_SPEED;
-        if (keys[KeyEvent.VK_W]) cam.cameraPosition.z += cam.CAMERA_SPEED;
-        if (keys[KeyEvent.VK_S]) cam.cameraPosition.z -= cam.CAMERA_SPEED;
+
+        /* CAMERA CONTROLS:
+
+        ** MOVEMENT: **
+        W: MOVE DIRECTLY FORWARD (ROTATION DEPENDENT)
+        S: MOVE DIRECTLY BACKWARD (ROTATION DEPENDENT)
+        A: MOVE DIRECTLY LEFT (ROTATION DEPENDENT)
+        D: MOVE DIRECTLY RIGHT (ROTATION DEPENDENT)
+
+        SPACE: MOVE DIRECTLY UP (ROTATION INDEPENDENT)
+        SHIFT: MOVE DIRECTLY DOWN (ROTATION INDEPENDENT)
+        
+
+        ** ROTATION: **
+
+        ARROW KEYS: 
+        LEFT/RIGHT: YAW
+        UP/DOWN: PITCH
+
+        (I DIDN'T IMPLEMENT ROLL BECAUSE IT IS NON-TYPICAL IN FIRST-PERSON CONTROLS)
+
+        */
+
+        double yaw = Math.toRadians(cam.yrot);
+        double pitch = Math.toRadians(cam.xrot);
+
+        Vertex changeV = new Vertex(
+            Math.sin(yaw) * Math.cos(pitch),
+            -Math.sin(pitch),
+            Math.cos(yaw) * Math.cos(pitch)
+        );
+        changeV.multiply(cam.CAMERA_SPEED);
+
+        if (keys[KeyEvent.VK_W]) {
+            cam.cameraPosition.add(changeV);
+        }
+        if (keys[KeyEvent.VK_S]) {
+            cam.cameraPosition.add(changeV.multiply(-1));
+        }
+
+        if (keys[KeyEvent.VK_D]) {
+            cam.cameraPosition.x += Math.cos(yaw) * cam.CAMERA_SPEED;
+            cam.cameraPosition.z += -Math.sin(yaw) * cam.CAMERA_SPEED;
+        }
+        if (keys[KeyEvent.VK_A]) {
+            cam.cameraPosition.x -= Math.cos(yaw) * cam.CAMERA_SPEED;
+            cam.cameraPosition.z -= -Math.sin(yaw) * cam.CAMERA_SPEED;
+        }
+
+
         if (keys[KeyEvent.VK_SPACE]) cam.cameraPosition.y += cam.CAMERA_SPEED;
         if (keys[KeyEvent.VK_SHIFT]) cam.cameraPosition.y -= cam.CAMERA_SPEED;
 
-        if (keys[KeyEvent.VK_LEFT]) cam.xrot -= cam.CAMERA_ROTATE_SPEED;
-        if (keys[KeyEvent.VK_RIGHT]) cam.xrot += cam.CAMERA_ROTATE_SPEED;
-        if (keys[KeyEvent.VK_UP]) cam.yrot += cam.CAMERA_ROTATE_SPEED;
-        if (keys[KeyEvent.VK_DOWN]) cam.yrot -= cam.CAMERA_ROTATE_SPEED;
+        if (keys[KeyEvent.VK_UP]) cam.xrot -= cam.CAMERA_ROTATE_SPEED;
+        if (keys[KeyEvent.VK_DOWN]) cam.xrot += cam.CAMERA_ROTATE_SPEED;
+        if (keys[KeyEvent.VK_RIGHT]) cam.yrot += cam.CAMERA_ROTATE_SPEED;
+        if (keys[KeyEvent.VK_LEFT]) cam.yrot -= cam.CAMERA_ROTATE_SPEED;
     }
 
     public static void main(String[] args) {

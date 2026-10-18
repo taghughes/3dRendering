@@ -28,6 +28,20 @@ public class Vertex {
         z += z_change;
     }
 
+    public Vertex add(Vertex v1) {
+        x += v1.x;
+        y += v1.y;
+        z += v1.z;
+        return this;
+    }
+
+    public Vertex multiply(double factor) {
+        x *= factor;
+        y *= factor;
+        z *= factor;
+        return this;
+    }
+
     @Override 
     public String toString() {
         return "("+x+", "+y+", "+z+")";

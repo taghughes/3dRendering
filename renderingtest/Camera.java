@@ -13,6 +13,11 @@ public class Camera {
     public double CAMERA_ROTATE_SPEED = 2;
 
     public int fov;
+    public int screenWidth;
+    public int screenHeight;
+    public double focalLength;
+    public int screenCenterX;
+    public int screenCenterY;
 
 
     public Camera() {
@@ -20,6 +25,25 @@ public class Camera {
         xrot = 0;
         yrot = 0;
         fov = 70;
+        screenWidth = 1000;
+        screenHeight = 1000;
+        double fov2 = Math.toRadians(fov);
+        focalLength = (screenHeight/2.0)/(Math.tan(fov2/2.0));
+        screenCenterX = screenWidth/2;
+        screenCenterY = screenHeight/2;
+    }
+
+    public Camera(int fieldOfView, int sw, int sh) {
+        cameraPosition = new Vertex();
+        xrot = 0;
+        yrot = 0;
+        fov = fieldOfView;
+        screenWidth = sw;
+        screenHeight = sh;
+        double fov2 = Math.toRadians(fov);
+        focalLength = (screenHeight/2.0)/(Math.tan(fov2/2.0));
+        screenCenterX = screenWidth/2;
+        screenCenterY = screenHeight/2;
     }
 
     public void rotateX(double xChange) {
@@ -43,23 +67,61 @@ public class Camera {
         }
     }
 
-    public double getProjectedX(Vertex v) {
-        return Math.toDegrees(Math.atan((v.x-cameraPosition.x)/(v.z-cameraPosition.z))) - xrot;
+    public Double getProjectedX(Vertex v) {
+        Vertex v1 = getCameraSpace(v);
+        //IF VERTEX IS BEHIND CAMERA RETURN NULL
+        if (v1.z <= 0.01) {
+            return null;
+        }
+        return screenCenterX + focalLength*(v1.x/v1.z);
     }
 
-    public double getProjectedY(Vertex v) {
-        return Math.toDegrees(Math.atan((v.y-cameraPosition.y)/(v.z-cameraPosition.z))) - yrot;
+    public Double getProjectedY(Vertex v) {
+        Vertex v1 = getCameraSpace(v);
+        //IF VERTEX IS BEHIND CAMERA RETURN NULL
+        if (v1.z <= 0.01) {
+            return null;
+        }
+        return screenCenterY - focalLength*(v1.y/v1.z);
+    }
+
+    public Vertex getCameraSpace(Vertex v) {
+        double yrot2 = Math.toRadians(yrot);
+        double xrot2 = Math.toRadians(xrot);
+
+        double dx = v.x - cameraPosition.x;
+        double dy = v.y - cameraPosition.y;
+        double dz = v.z - cameraPosition.z;
+
+        double x1 = Math.cos(yrot2)*dx - Math.sin(yrot2)*dz;
+        double y1 = dy;
+        double z1 = Math.sin(yrot2)*dx + Math.cos(yrot2)*dz;
+
+        double xc = x1;
+        double yc = Math.cos(xrot2)*y1 + Math.sin(xrot2)*z1;
+        double zc = -Math.sin(xrot2)*y1 + Math.cos(xrot2)*z1;
+
+        return new Vertex(xc, yc, zc);
     }
 
     public ArrayList<ProjectedLine> getProjectedLines(ArrayList<Line> lineList, int cameraSizeX, int cameraSizeY) {
         ArrayList<ProjectedLine> ret = new ArrayList<>();
         for (Line l : lineList) {
-            ProjectedVertex v1 = new ProjectedVertex((int)(getProjectedX(l.v1)/fov/2*cameraSizeX), 
-                                                     (int)(getProjectedY(l.v1)/fov/2*cameraSizeY));
-            ProjectedVertex v2 = new ProjectedVertex((int)(getProjectedX(l.v2)/fov/2*cameraSizeX), 
-                                                     (int)(getProjectedY(l.v2)/fov/2*cameraSizeY));
-            ProjectedLine newL = new ProjectedLine(v1, v2);
-            ret.add(newL);
+            Double pv1x = getProjectedX(l.v1);
+            Double pv1y = getProjectedY(l.v1);
+
+            Double pv2x = getProjectedX(l.v2);
+            Double pv2y = getProjectedY(l.v2);
+
+            //ONLY DRAW LINE IF BOTH VERTICES ARE IN FRONT OF CAMERA
+            if (pv1x != null && pv1y != null && pv2x != null && pv2y != null) {
+                ProjectedVertex v1 = new ProjectedVertex(pv1x.intValue(), 
+                                                         pv1y.intValue());
+                ProjectedVertex v2 = new ProjectedVertex(pv2x.intValue(), 
+                                                         pv2y.intValue());
+                ProjectedLine newL = new ProjectedLine(v1, v2);
+                ret.add(newL);
+            }            
         }
         return ret;
     }
